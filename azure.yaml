@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+requiredVersions:
+  extensions:
+    azure.ai.agents: '>=1.0.0-beta.4'
+name: graph-obo-dotnet-agent
+services:
+  graph-obo-dotnet-agent:
+    host: azure.ai.agent
+    project: src/HostedOBOAgent
+    language: csharp
+    codeConfiguration:
+      runtime: dotnet_10
+      entryPoint: HostedOBOAgent.dll
+    kind: hosted
+    name: graph-obo-dotnet-agent
+    displayName: Graph OBO .NET Agent
+    description: A .NET Responses hosted agent that retrieves the signed-in user's OneDrive folders through Microsoft Graph OBO.
+    protocols:
+      - protocol: responses
+        version: 2.0.0
+    environmentVariables:
+      - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+        value: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
+      - name: KEY_VAULT_URL
+        value: ${KEY_VAULT_URL}
+      - name: APP_OBO_TENANT_ID
+        value: ${APP_OBO_TENANT_ID}
+      - name: APP_OBO_CLIENT_ID
+        value: ${APP_OBO_CLIENT_ID}
+      - name: APP_OBO_CLIENT_SECRET_NAME
+        value: ${APP_OBO_CLIENT_SECRET_NAME}
+      - name: CLIENT_USER_TOKEN_HEADER
+        value: x-client-user-token
+    container:
+      resources:
+        cpu: '1'
+        memory: 2Gi
+infra:
+  provider: microsoft.foundry

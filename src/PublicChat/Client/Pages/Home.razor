@@ -1,0 +1,197 @@
+﻿@page "/"
+@attribute [Authorize]
+@inject ChatClient Chat
+
+<PageTitle>OneDrive Copilot</PageTitle>
+
+<div class="chat-shell">
+    <header class="chat-hero">
+        <div class="agent-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img">
+                <path d="M8.3 5.7A5 5 0 0 1 17.8 7a4.5 4.5 0 0 1-.3 9H7a4 4 0 0 1 1.3-7.8 5 5 0 0 1 0-2.5Z" />
+            </svg>
+        </div>
+        <div>
+            <div class="eyebrow">Microsoft Graph · Delegated access</div>
+            <h1>OneDrive Copilot</h1>
+            <p>Explore your files with a private Foundry agent acting securely on your behalf.</p>
+        </div>
+        <div class="privacy-pill">
+            <span class="status-dot"></span>
+            Private &amp; grounded
+        </div>
+    </header>
+
+    <main class="conversation" aria-live="polite" aria-busy="@isSending">
+        @if (messages.Count == 0)
+        {
+            <section class="welcome">
+                <div class="welcome-icon" aria-hidden="true">✦</div>
+                <h2>What would you like to know?</h2>
+                <p>I can summarize and compare the folders in your OneDrive.</p>
+                <div class="suggestions">
+                    @foreach (var suggestion in Suggestions)
+                    {
+                        <button type="button" @onclick="() => UseSuggestionAsync(suggestion)" disabled="@isSending">
+                            <span>@suggestion</span>
+                            <span class="arrow" aria-hidden="true">→</span>
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+
+        @foreach (var item in messages)
+        {
+            <article class="message-row @(item.Role == "user" ? "user-row" : "agent-row")">
+                @if (item.Role == "assistant")
+                {
+                    <div class="avatar agent-avatar" aria-hidden="true">✦</div>
+                }
+                <div class="message-content">
+                    <div class="message-label">@(item.Role == "user" ? "You" : "OneDrive Copilot")</div>
+                    <div class="message-bubble">@item.Content</div>
+                </div>
+                @if (item.Role == "user")
+                {
+                    <div class="avatar user-avatar" aria-hidden="true">You</div>
+                }
+            </article>
+        }
+
+        @if (isSending)
+        {
+            <article class="message-row agent-row">
+                <div class="avatar agent-avatar" aria-hidden="true">✦</div>
+                <div class="message-content">
+                    <div class="message-label">OneDrive Copilot</div>
+                    <div class="message-bubble typing" aria-label="@status">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </article>
+        }
+    </main>
+
+    <footer class="composer-area">
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="error-banner" role="alert">
+                <span aria-hidden="true">!</span>
+                <span>@error</span>
+                <button type="button" aria-label="Dismiss error" @onclick="() => error = null">×</button>
+            </div>
+        }
+
+        <div class="composer">
+            <textarea id="message"
+                      aria-label="Message OneDrive Copilot"
+                      placeholder="Ask a follow-up about your OneDrive…"
+                      rows="1"
+                      maxlength="8000"
+                      @bind="draft"
+                      @bind:event="oninput"
+                      @onkeyup="HandleKeyUpAsync"
+                      disabled="@isSending"></textarea>
+            <button class="send-button"
+                    type="button"
+                    aria-label="Send message"
+                    title="Send message"
+                    @onclick="SendAsync"
+                    disabled="@(isSending || string.IsNullOrWhiteSpace(draft))">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m4 4 17 8-17 8 3-8-3-8Zm3.8 7h7.8L6.7 6.8 7.8 11Zm0 2-1.1 4.2 8.9-4.2H7.8Z" />
+                </svg>
+            </button>
+        </div>
+        <div class="composer-meta">
+            <span>Enter to send · Shift+Enter for a new line</span>
+            @if (messages.Count > 0)
+            {
+                <button type="button" @onclick="StartNewChat" disabled="@isSending">New conversation</button>
+            }
+        </div>
+    </footer>
+</div>
+
+@code {
+    private static readonly string[] Suggestions =
+    [
+        "List my OneDrive root folders and their sizes.",
+        "Which folders use the most storage?",
+        "Give me a concise overview of my OneDrive."
+    ];
+
+    private readonly List<ChatMessage> messages = [];
+    private string draft = string.Empty;
+    private string? error;
+    private string? status;
+    private bool isSending;
+
+    private Task UseSuggestionAsync(string suggestion)
+    {
+        draft = suggestion;
+        return SendAsync();
+    }
+
+    private async Task HandleKeyUpAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !args.ShiftKey)
+        {
+            await SendAsync();
+        }
+    }
+
+    private async Task SendAsync()
+    {
+        var userText = draft.Trim();
+        if (isSending || string.IsNullOrWhiteSpace(userText))
+        {
+            return;
+        }
+
+        isSending = true;
+        error = null;
+        draft = string.Empty;
+        messages.Add(new ChatMessage("user", userText));
+        status = "Requesting delegated access";
+
+        try
+        {
+            status = "Thinking";
+            var context = messages.TakeLast(20).ToArray();
+            var result = await Chat.SendAsync(context);
+            messages.Add(new ChatMessage("assistant", result.Text));
+            status = null;
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            messages.RemoveAt(messages.Count - 1);
+            draft = userText;
+            status = "Additional sign-in is required";
+            await InvokeAsync(StateHasChanged);
+            exception.Redirect();
+        }
+        catch (Exception exception)
+        {
+            messages.RemoveAt(messages.Count - 1);
+            draft = userText;
+            error = exception is HttpRequestException
+                ? exception.Message
+                : $"The agent could not complete your request. {exception.Message}";
+            status = null;
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private void StartNewChat()
+    {
+        messages.Clear();
+        draft = string.Empty;
+        error = null;
+        status = null;
+    }
+}

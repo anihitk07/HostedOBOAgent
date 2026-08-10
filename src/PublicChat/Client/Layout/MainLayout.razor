@@ -1,0 +1,26 @@
+﻿@inherits LayoutComponentBase
+<div class="app-frame">
+    <header class="top-bar">
+        <a class="brand" href="/">
+            <span class="brand-symbol" aria-hidden="true">✦</span>
+            <span>Foundry Workspace</span>
+        </a>
+        <AuthorizeView>
+            <Authorized Context="auth">
+                <div class="account">
+                    <span class="account-name">@auth.User.Identity?.Name</span>
+                    <button type="button" @onclick="SignOut">Sign out</button>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </header>
+    <main>
+        @Body
+    </main>
+</div>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+
+    private void SignOut() => Navigation.NavigateTo("authentication/logout");
+}

@@ -1,0 +1,33 @@
+# .NET build and IDE output
+**/[Bb]in/
+**/[Oo]bj/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test, coverage, and publish output
+**/TestResults/
+**/coverage/
+**/publish/
+*.coverage
+*.coveragexml
+
+# Local configuration and credentials
+**/local.settings.json
+**/.env
+**/.env.*
+!**/.env.example
+secrets.json
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.userprefs

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: graph-obo-public-chat
+metadata:
+  template: functions-quickstart-dotnet-azd@1.1.0
+services:
+  api:
+    project: ./GraphOboRelay/
+    language: dotnet
+    host: function
+  web:
+    project: ../Client/
+    language: dotnet
+    host: staticwebapp
+    dist: wwwroot
