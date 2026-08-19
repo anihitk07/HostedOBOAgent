@@ -5,5 +5,5 @@ using './jumpbox.bicep'
 // Never commit a password value into this file.
 param location = 'westus3'
 param vnetName = 'vnet-hostedobo-wus3'
-param jumpboxVmName = 'vm-hostedobo-jump'
+param jumpboxVmName = 'vm-obo-jump'
 param adminUsername = 'azureadmin'

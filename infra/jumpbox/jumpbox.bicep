@@ -9,7 +9,7 @@ param vnetName string
 @description('Existing VNet must have room for two new /26 or larger subnets.')
 param bastionSubnetPrefix string = '192.168.2.0/26'
 param jumpboxSubnetPrefix string = '192.168.2.64/26'
-param jumpboxVmName string = 'vm-hostedobo-jump'
+param jumpboxVmName string = 'vm-obo-jump'
 param adminUsername string = 'azureadmin'
 @secure()
 param adminPassword string
@@ -94,7 +94,7 @@ resource jumpboxVm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   location: location
   properties: {
     hardwareProfile: {
-      vmSize: 'Standard_D2s_v5'
+      vmSize: 'Standard_D2s_v7'
     }
     osProfile: {
       computerName: jumpboxVmName
@@ -103,9 +103,9 @@ resource jumpboxVm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     }
     storageProfile: {
       imageReference: {
-        publisher: 'MicrosoftWindowsDesktop'
-        offer: 'windows-11'
-        sku: 'win11-23h2-pro'
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: '2022-datacenter-azure-edition'
         version: 'latest'
       }
       osDisk: {
