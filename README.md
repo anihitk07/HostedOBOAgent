@@ -330,6 +330,21 @@ The Standard Agent setup, Storage, Azure AI Search, Cosmos DB, Key Vault, and Fo
 
 Admin consent sets the delegated Graph `Files.Read` grant to `AllPrincipals` for this tenant, avoiding a consent prompt for every user. It does not create an application permission, cannot issue a Graph token without token B, cannot select another user, and does not bypass the permissions of the signed-in user resolved by `/me`.
 
+## Fork additions: private-network infrastructure
+
+This fork adds the infrastructure needed to deploy the whole solution — VNet,
+Foundry, Key Vault, and hosted agent — with `publicNetworkAccess=Disabled`:
+
+| Path | Purpose |
+| --- | --- |
+| [`infra/foundry-private`](infra/foundry-private) | Vendored, parameterized copy of the official [`15-private-network-standard-agent-setup`](https://github.com/microsoft-foundry/foundry-samples/tree/main/infrastructure/infrastructure-setup-bicep/15-private-network-standard-agent-setup) template: BYO VNet, private-endpoint Standard Agent Setup (Cosmos DB, AI Search, Storage), System Assigned Managed Identity. |
+| [`infra/deployment-tools`](infra/deployment-tools) | Vendored `preflight` and `cleanup` helpers from the same template family. |
+| [`infra/jumpbox`](infra/jumpbox) | New: Windows VM + Azure Bastion. Required because once the Foundry account is network-isolated, every `azd`/`az` command against the project data plane must originate from inside the VNet. |
+| [`docs/sequence-diagram.md`](docs/sequence-diagram.md) | Full deployment sequence diagram plus the OBO token-exchange sequence and condensed repro steps. |
+
+See [`docs/sequence-diagram.md`](docs/sequence-diagram.md) for the exact order
+of operations and the OBO token flow once the private plane is live.
+
 ## Validation
 
 Detailed deployment decisions and historical evidence are in the [deployment plan](.azure/deployment-plan.md).
