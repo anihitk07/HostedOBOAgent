@@ -24,18 +24,18 @@ sequenceDiagram
 
     Op->>Az: 1. Preflight (providers, quota, RBAC, what-if)
     Op->>Az: 2. az deployment group create infra/foundry-private/main.bicep
-    Az->>T15: 3. Provision VNet, subnets, Foundry account+project,\nCosmos DB, Storage, AI Search, private endpoints, DNS zones
+    Az->>T15: 3. Provision VNet, subnets, Foundry account+project,<br/>Cosmos DB, Storage, AI Search, private endpoints, DNS zones
     T15-->>Net: 4. Capability host bound to snet-agent
     Op->>Az: 5. az deployment group create infra/jumpbox/jumpbox.bicep
     Az-->>Jump: 6. Jumpbox VM + Bastion ready
-    Op->>Entra: 7. Create SPA, relay API, OBO app registrations;\ngrant tenant admin consent on Graph Files.Read
-    Op->>Az: 8. az deployment group create infra/private-keyvault.bicep\n(from the jumpbox, or with operatorObjectId pre-set)
+    Op->>Entra: 7. Create SPA, relay API, OBO app registrations;<br/>grant tenant admin consent on Graph Files.Read
+    Op->>Az: 8. az deployment group create infra/private-keyvault.bicep<br/>(from the jumpbox, or with operatorObjectId pre-set)
     Az-->>KV: 9. Private Key Vault + OBO client secret
     KV-->>Agent: 10. Grant Foundry project MI: Key Vault Secrets User
     Op->>Jump: 11. RDP via Bastion
     Jump->>Az: 12. azd ai agent deploy (must run from inside the VNet)
     Az-->>Agent: 13. Hosted agent version active
-    Op->>Az: 14. Deploy src/PublicChat/Relay/infra/main.bicep\n(Function relay + Static Web App)
+    Op->>Az: 14. Deploy src/PublicChat/Relay/infra/main.bicep<br/>(Function relay + Static Web App)
     Az-->>Relay: 15. Relay + SPA live, granted Foundry Agent Consumer
     Jump->>Agent: 16. Private smoke test (Responses call over PE)
     Op->>Relay: 17. Browser E2E: sign in, ask for OneDrive folders
@@ -52,6 +52,7 @@ sequenceDiagram
     participant R as Function relay
     participant F as Private Foundry endpoint
     participant A as Hosted agent
+    participant KV as Private Key Vault
     participant G as Microsoft Graph
 
     U->>S: Sign in
